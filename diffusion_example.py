@@ -18,6 +18,9 @@ if USE_WANDB:
     import wandb
     WANDB_PROJECT_NAME = "Diffusion Example"
 
+if not os.path.exists(OUTPUT_FOLDER): 
+    os.mkdir(OUTPUT_FOLDER)
+
 # Get timestemp for saving folder name. 
 get_timestemp = lambda: datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
