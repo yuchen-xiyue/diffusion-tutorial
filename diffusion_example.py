@@ -50,7 +50,8 @@ def generate(
         height: int=512, 
         width : int=512, 
         num_inference_steps : int=INFERENCE_STEPS, 
-        timesteps_to_capture: list[int]=TIMESTEPS
+        timesteps_to_capture: list[int]=TIMESTEPS, 
+        random_seed: int=42
         ): 
     
     output = []
@@ -62,7 +63,7 @@ def generate(
                 output.append(latents_to_pil_images(pipe=pipline, latents=callback_kwargs['latents']))
         return callback_kwargs
     
-
+    generator = torch.Generator(device="cpu").manual_seed(random_seed)
     pipe = StableDiffusionPipeline.from_pretrained(MODEL_NAME, torch_dtype=torch.float16).to(DEVICE)
     imgs = pipe(
             prompts, 
@@ -70,7 +71,8 @@ def generate(
             width=width, 
             num_images_per_prompt=num_images, 
             num_inference_steps=num_inference_steps, 
-            callback_on_step_end=callback_dynamic_cfg
+            callback_on_step_end=callback_dynamic_cfg, 
+            generator=generator
             )[0]
     output.append(imgs)
 
@@ -82,7 +84,7 @@ def generate(
     # # Initiate latent variable
     # latents = torch.randn(
     #                 (num, pipe.unet.config.in_channels, height // 8, width // 8),
-    #                 generator=torch.manual_seed(42),
+    #                 generator=torch.manual_seed(random_seed),
     #                 ).to(DEVICE)
             
     # # Diffuse with DDIM scheduler
@@ -152,6 +154,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("prompts", type=str, help="Type in your prompts for generation. ")
     parser.add_argument("-n", "--num_images", type=int, default=1, help="How many images to generate, default 1")
+    parser.add_argument("-s", "--seed", type=int, default=42, help="Set random seed for determined results. ")
     parser.add_argument("-w", "--width",  type=int, default=512, help="Output image width, 512 by default. ")
     parser.add_argument("-g", "--height", type=int, default=512, help="Output image height, 512 by default. ")
     args = parser.parse_args()
@@ -170,7 +173,8 @@ def main():
             prompts=configs['prompts'], 
             num_images=configs['num_images'], 
             height=configs['height'], 
-            width=configs['width']
+            width=configs['width'], 
+            random_seed=configs['seed']
             )
         
     
