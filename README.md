@@ -17,13 +17,13 @@ Simply,
 python diffusion_example.py <prompt-text>
 ```
 Will generate one single image for input prompt. 
-```
+
 Simply, 
 ```shell
 python diffusion_example.py <prompt-text>
 ```
 Example: 
-```
+```shell
 diffusion_example.py "a pile of books" -n 2 -s 42
 ```
 Output: 
