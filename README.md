@@ -31,5 +31,5 @@ Output:
 
 ### Useful links
 - Hugging Face AI community: https://huggingface.co/
-- WandB: https://wandb.ai/
+- Weight & Biases(WandB): https://wandb.ai/
 - Stable Diffusion Paper: https://arxiv.org/pdf/2112.10752
