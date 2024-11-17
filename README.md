@@ -17,3 +17,8 @@ Simply,
 python diffusion_example.py <prompt-text>
 ```
 Will generate one single image for input prompt. 
+
+### Useful links
+- Hugging Face AI community: https://huggingface.co/
+- WandB: https://wandb.ai/
+- Stable Diffusion Paper: https://arxiv.org/pdf/2112.10752
