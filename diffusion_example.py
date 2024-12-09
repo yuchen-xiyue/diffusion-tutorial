@@ -6,18 +6,18 @@ import torch
 from PIL import Image
 from diffusers import StableDiffusionPipeline
 
-# Configuration
+# Configurations
 MODEL_NAME = "CompVis/stable-diffusion-v1-4"
 DEVICE = "cuda" # "cpu"
 OUTPUT_FOLDER = "outputs"
 USE_WANDB = True
 INFERENCE_STEPS = 50
 TIMESTEPS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45]
-
+# use Weight&Bias for visualization 
 if USE_WANDB: 
     import wandb
     WANDB_PROJECT_NAME = "Diffusion Example"
-
+# check if result folder exist
 if not os.path.exists(OUTPUT_FOLDER): 
     os.mkdir(OUTPUT_FOLDER)
 
@@ -26,14 +26,14 @@ get_timestemp = lambda: datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
 
 # Diffusion process happen in latent space.
-# This function could get intermediate image result from latent variants. 
+# This function could get intermediate result from latent variants at specified timesteps. 
 def latents_to_pil_images(pipe: StableDiffusionPipeline, latents: torch.Tensor): 
     """
     Diffusion process happens in latent space.
     This function could get intermediate image result from latent variants. 
     """
-
-    latents = 1 / pipe.vae.config.scaling_factor * latents # unscale variants
+    # unscale the latent variants
+    latents = 1 / pipe.vae.config.scaling_factor * latents 
     # decode latent variants to pytorch images: [-1, 1] -> [0, 255]
     images_pt  = ((pipe.vae.decode(latents, return_dict=False)[0].cpu()/2 + .5).clamp(0, 1) * 255).to(torch.uint8)
     # convert pytorch images to numpy image formats
@@ -57,14 +57,14 @@ def generate(
     output = []
 
     """Diffuse with pipeline and callback function. """
-    def callback_dynamic_cfg(pipline, step, timestep, callback_kwargs): 
+    def callback_dynamic_cfg(pipline, step, _, callback_kwargs): 
         if step in timesteps_to_capture: 
             with torch.no_grad(): 
                 output.append(latents_to_pil_images(pipe=pipline, latents=callback_kwargs['latents']))
         return callback_kwargs
     
-    generator = torch.Generator(device="cpu").manual_seed(random_seed)
-    pipe = StableDiffusionPipeline.from_pretrained(MODEL_NAME, torch_dtype=torch.float16).to(DEVICE)
+    generator = torch.Generator(device="cpu").manual_seed(seed=random_seed)
+    pipe = StableDiffusionPipeline.from_pretrained(pretrained_model_name_or_path=MODEL_NAME, torch_dtype=torch.float16).to(DEVICE)
     imgs = pipe(
             prompts, 
             height=height, 
@@ -100,22 +100,22 @@ def generate(
     return output
 
 
-def save_imgs(output: list[list[Image.Image]]): 
+def save_imgs(output: list[list[Image.Image]]) -> None: 
     """Locally save the results. """
     output_folder = os.path.join(OUTPUT_FOLDER, get_timestemp())
-    os.mkdir(output_folder)
+    os.mkdir(path=output_folder)
     output = zip(*output)
     for i, img_list in enumerate(output): 
         result_folder = os.path.join(output_folder, f"result-{i}")
-        os.mkdir(result_folder)
+        os.mkdir(path=result_folder)
         for j, img in enumerate(img_list): 
             if j != len(img_list) - 1: 
-                img.save(os.path.join(result_folder, f"step-{TIMESTEPS[j]}.png"))
+                img.save(fp=os.path.join(result_folder, f"step-{TIMESTEPS[j]}.png"))
             else: 
-                img.save(os.path.join(result_folder, f"result(step-{INFERENCE_STEPS}).png"))
+                img.save(fp=os.path.join(result_folder, f"result(step-{INFERENCE_STEPS}).png"))
     return
 
-def log_imgs_with_wandb(output: list[list[Image.Image]]): 
+def log_imgs_with_wandb(output: list[list[Image.Image]]) -> None: 
     output = zip(*output)
     for i, img_list in enumerate(output): 
         wandb.log({
